@@ -107,6 +107,7 @@ public class GammaGraphView extends SurfaceView implements
 		GammaGraphUtils.drawGammaGraph(canvas, this.gammaGraphInfo.knots, Color.BLACK, 100);
 		GammaGraphUtils.drawGraphBase(canvas, this.gammaGraphInfo, this.boundLines);
 		GammaGraphUtils.drawKnots(canvas, this.gammaGraphInfo.knots, Color.BLACK);
+		GammaGraphUtils.generateGammaTable(this.gammaGraphInfo.baseRect, this.gammaGraphInfo.knots, this.gammaGraphInfo.gammatable);
 		
 		Log.d("GammaGraph", "onDraw End");
 	}

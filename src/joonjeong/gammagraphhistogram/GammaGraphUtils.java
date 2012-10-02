@@ -2,7 +2,6 @@ package joonjeong.gammagraphhistogram;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ListIterator;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -87,21 +86,41 @@ public class GammaGraphUtils {
 		}
 	}
 
-	public static void drawGammaGraph(Canvas canvas,
+	public static void drawGammaGraph(final Canvas canvas,
 			List<PointF> knots, int color, int alpha) {
 		Log.d("GammaGraph", "function drawGammaGraph");
-		Paint paint = new Paint();
+		final Paint paint = new Paint();
 		paint.setColor(color);
 		paint.setAntiAlias(true);
 		paint.setAlpha(alpha);
-		cubic_hermite_spline(canvas, knots, 0.0005f, paint);
+		doCubicHermiteSpline(knots, 0.0005f, new Callback() {
+			public void doCallback(float x, float y) {
+				canvas.drawPoint(x, y, paint);
+			}
+		});
+	}
+	public static void generateGammaTable(final RectF baseRect, final List<PointF> knots, final int[] gammatable) {
+		doCubicHermiteSpline(knots, 0.0005f, new Callback() {
+			public void doCallback(float x, float y) {
+				float zoom = (baseRect.right - baseRect.left) / 255f;
+				int gammaIndex = (int)((x - baseRect.left) / zoom);
+				if(0 <= gammaIndex && gammaIndex < 256) {
+					int gammaValue = (int)((baseRect.bottom - y) / zoom);
+					gammatable[gammaIndex] = gammaValue;
+				}
+			}
+		});
+	}
+	
+	public static interface Callback {
+		void doCallback(float x, float y);
 	}
 	
 	private static PointF catmull_rom_spline_tangent(PointF p0, PointF p1) {
 		return new PointF((p0.x - p1.x) / 2, (p0.y - p1.y) / 2);
 	}
 
-	private static void cubic_hermite_spline(Canvas canvas, List<PointF> knots, float delta, Paint paint) {		
+	private static void doCubicHermiteSpline(List<PointF> knots, float delta, Callback callback) {		
 		int n = knots.size();
 		float px = 0;
 		float py = 0;
@@ -129,7 +148,7 @@ public class GammaGraphUtils {
 							* m1.x;
 					py = h00 * p0.y + h10 * m0.y + h01 * p1.y + h11
 							* m1.y;
-					canvas.drawPoint(px, py, paint);
+					callback.doCallback(px, py);
 				} else if (i < n - 2) {
 					PointF p0 = knots.get(i - 1);
 					PointF p1 = knots.get(i);
@@ -143,7 +162,7 @@ public class GammaGraphUtils {
 							* m1.x;
 					py = h00 * p1.y + h10 * m0.y + h01 * p2.y + h11
 							* m1.y;
-					canvas.drawPoint(px, py, paint);
+					callback.doCallback(px, py);
 				} else if (i == n - 1) {
 					if (n < 3) {
 						continue;
@@ -159,15 +178,8 @@ public class GammaGraphUtils {
 							* m1.x;
 					py = h00 * p1.y + h10 * m0.y + h01 * p2.y + h11
 							* m1.y;
-					canvas.drawPoint(px, py, paint);
+					callback.doCallback(px, py);
 				}
-				/*
-				RectF baseRect = knots.baseRect;
-				float zoom = (baseRect.right - baseRect.left) / 255f;
-				int gammaIndex = (int)((px - baseRect.left) / zoom);
-				int gammaValue = (int)((baseRect.bottom - baseRect.top - py) / zoom);
-				knots.gammatable[gammaIndex] = gammaValue;
-				*/ 
 			}
 		}
 	}
