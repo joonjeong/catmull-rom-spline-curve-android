@@ -97,7 +97,7 @@ public class GammaGraphUtils {
 		cubic_hermite_spline(canvas, knots, 0.0005f, paint);
 	}
 	
-	private static PointF catnull_rome_spline_tangent(PointF p0, PointF p1) {
+	private static PointF catmull_rom_spline_tangent(PointF p0, PointF p1) {
 		return new PointF((p0.x - p1.x) / 2, (p0.y - p1.y) / 2);
 	}
 
@@ -122,8 +122,8 @@ public class GammaGraphUtils {
 					} else {
 						p2 = p1;
 					}
-					PointF m0 = catnull_rome_spline_tangent(p1, p0);
-					PointF m1 = catnull_rome_spline_tangent(p2, p0);
+					PointF m0 = catmull_rom_spline_tangent(p1, p0);
+					PointF m1 = catmull_rom_spline_tangent(p2, p0);
 
 					px = h00 * p0.x + h10 * m0.x + h01 * p1.x + h11
 							* m1.x;
@@ -136,8 +136,8 @@ public class GammaGraphUtils {
 					PointF p2 = knots.get(i + 1);
 					PointF p3 = knots.get(i + 2);
 
-					PointF m0 = catnull_rome_spline_tangent(p2, p0);
-					PointF m1 = catnull_rome_spline_tangent(p3, p1);
+					PointF m0 = catmull_rom_spline_tangent(p2, p0);
+					PointF m1 = catmull_rom_spline_tangent(p3, p1);
 
 					px = h00 * p1.x + h10 * m0.x + h01 * p2.x + h11
 							* m1.x;
@@ -152,8 +152,8 @@ public class GammaGraphUtils {
 					PointF p1 = knots.get(i - 1);
 					PointF p2 = knots.get(i);
 
-					PointF m0 = catnull_rome_spline_tangent(p2, p0);
-					PointF m1 = catnull_rome_spline_tangent(p2, p1);
+					PointF m0 = catmull_rom_spline_tangent(p2, p0);
+					PointF m1 = catmull_rom_spline_tangent(p2, p1);
 
 					px = h00 * p1.x + h10 * m0.x + h01 * p2.x + h11
 							* m1.x;
