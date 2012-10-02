@@ -208,32 +208,18 @@ public class GammaGraphUtils {
 		}
 	}
 
-	public static void addKnot(List<PointF> knots, PointF movingKnot) {
-		ListIterator<PointF> listIter = knots.listIterator();
-		while(listIter.hasNext()) {
-			PointF p0 = listIter.next();
-			if(movingKnot.x < p0.x) {
-				listIter.previous();
-				listIter.add(movingKnot);
-				Log.d("", "");
-				break;
-			}
-		}
-	}
 	private static boolean isOnCircle(PointF target, PointF base, float d) {
 		float dx = target.x - base.x;
 		float dy = target.y - base.y;
 		return Math.sqrt(dx * dx + dy * dy) < d;
 	}
-	public static PointF selectOrNewKnot(PointF touchPoint, List<PointF> knots) {
-		ListIterator<PointF> knotIter = knots.listIterator();
-		while(knotIter.hasNext()) {
-			PointF knot = knotIter.next();
+	
+	public static PointF selectKnot(PointF touchPoint, List<PointF> knots) {
+		for(PointF knot : knots) {
 			if(isOnCircle(touchPoint, knot, 20f)) {
-				knotIter.remove();
 				return knot;
 			}
 		}
-		return touchPoint;
+		return null;
 	}
 }

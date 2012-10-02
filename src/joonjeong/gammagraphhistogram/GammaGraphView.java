@@ -2,6 +2,7 @@ package joonjeong.gammagraphhistogram;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Random;
@@ -92,7 +93,6 @@ public class GammaGraphView extends SurfaceView implements
 
 	private List<PointF> tmpKnots = new ArrayList<PointF>();
 	private boolean isMoving = false;
-	private PointF movingKnot;
 	@Override
 	protected void onDraw(Canvas canvas) {
 		Log.d("GammaGraph", "onDraw Start");
@@ -100,14 +100,11 @@ public class GammaGraphView extends SurfaceView implements
 				this.getHeight());
 		GammaGraphUtils.drawGammaHistogram(canvas, this.gammaGraphInfo);
 		if(isMoving) {
-			tmpKnots.clear();
-			for(PointF knot : gammaGraphInfo.knots) {
-				tmpKnots.add(knot);
-			}
-			GammaGraphUtils.addKnot(tmpKnots, movingKnot);
-			GammaGraphUtils.drawGammaGraph(canvas, tmpKnots,Color.RED, 70);
-			GammaGraphUtils.drawKnots(canvas, tmpKnots, Color.RED);
+			Collections.sort(this.tmpKnots, pointfComparator);
+			GammaGraphUtils.drawGammaGraph(canvas, this.tmpKnots,Color.RED, 70);
+			GammaGraphUtils.drawKnots(canvas, this.tmpKnots, Color.RED);
 		}
+		Collections.sort(this.gammaGraphInfo.knots, pointfComparator);
 		GammaGraphUtils.drawGammaGraph(canvas, this.gammaGraphInfo.knots, Color.BLACK, 100);
 		GammaGraphUtils.drawGraphBase(canvas, this.gammaGraphInfo, this.boundLines);
 		GammaGraphUtils.drawKnots(canvas, this.gammaGraphInfo.knots, Color.BLACK);
@@ -115,6 +112,13 @@ public class GammaGraphView extends SurfaceView implements
 		Log.d("GammaGraph", "onDraw End");
 	}
 	
+	private Comparator<PointF> pointfComparator = new Comparator<PointF>() {
+		public int compare(PointF a, PointF b) {
+			return (int) (a.x - b.x);
+		}
+	};
+	private PointF movingKnot;
+	private PointF selectedKnot;
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
 		Log.d("GammaGraph", "onTouchEvent Start");
@@ -128,14 +132,36 @@ public class GammaGraphView extends SurfaceView implements
 				if (this.gammaGraphInfo.baseRect.top < y && y < this.gammaGraphInfo.baseRect.bottom) {
 					switch (event.getAction()) {
 					case MotionEvent.ACTION_DOWN:
-					case MotionEvent.ACTION_MOVE:
+						movingKnot = new PointF(x, y);
 						isMoving = true;
-						movingKnot = GammaGraphUtils.selectOrNewKnot(new PointF(x, y), this.gammaGraphInfo.knots);
+						this.tmpKnots.clear();
+						for(PointF knot : gammaGraphInfo.knots) {
+							this.tmpKnots.add(knot);
+						}
+						selectedKnot = GammaGraphUtils.selectKnot(movingKnot, this.gammaGraphInfo.knots);
+						if(selectedKnot == null) {
+							Log.d("GammaGraphMovingTest", "new point selected");
+							this.tmpKnots.add(this.movingKnot);
+						} else {
+							Log.d("GammagraphMovingTest", "current point selected");
+							this.tmpKnots.remove(selectedKnot);
+							this.tmpKnots.add(this.movingKnot);
+						}
+						invalidate();
+						break;
+					case MotionEvent.ACTION_MOVE:
+						this.tmpKnots.remove(this.movingKnot);
+						this.movingKnot = new PointF(x, y);
+						this.tmpKnots.add(this.movingKnot);
+						
 						invalidate();
 						break;
 					case MotionEvent.ACTION_UP:
 						isMoving = false;
-						GammaGraphUtils.addKnot(this.gammaGraphInfo.knots, movingKnot);
+						this.gammaGraphInfo.knots.add(new PointF(x, y));
+						if(selectedKnot != null) {
+							this.gammaGraphInfo.knots.remove(selectedKnot);
+						}
 						invalidate();
 						break;
 					}
