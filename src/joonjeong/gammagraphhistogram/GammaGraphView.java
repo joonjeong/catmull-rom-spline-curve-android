@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Random;
 
 import android.content.Context;
@@ -123,7 +122,7 @@ public class GammaGraphView extends SurfaceView implements
 	public boolean onTouchEvent(MotionEvent event) {
 		Log.d("GammaGraph", "onTouchEvent Start");
 		Log.d("GammaGraph", "(" + event.getX() + "," + event.getY() + ")");
-
+		
 		Canvas canvas = getHolder().lockCanvas();
 		try {
 			float x = event.getX();
@@ -143,7 +142,14 @@ public class GammaGraphView extends SurfaceView implements
 							Log.d("GammaGraphMovingTest", "new point selected");
 							this.tmpKnots.add(this.movingKnot);
 						} else {
-							Log.d("GammagraphMovingTest", "current point selected");
+							Log.d("GammaGraphMovingTest", "current point selected");
+							if(selectedKnot.x == gammaGraphInfo.baseRect.left) {
+								Log.d("GammaGraphMovingTest", "first");
+								this.movingKnot.x = gammaGraphInfo.baseRect.left;
+							} else if(selectedKnot.x == gammaGraphInfo.baseRect.right) {
+								Log.d("GammaGraphMovingTest", "last");
+								this.movingKnot.x = gammaGraphInfo.baseRect.right;
+							}
 							this.tmpKnots.remove(selectedKnot);
 							this.tmpKnots.add(this.movingKnot);
 						}
