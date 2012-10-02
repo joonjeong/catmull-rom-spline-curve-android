@@ -2,6 +2,7 @@ package joonjeong.gammagraphhistogram;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -87,23 +88,21 @@ public class GammaGraphUtils {
 	}
 
 	public static void drawGammaGraph(Canvas canvas,
-			GammaGraphInfo gammaGraphInfo) {
+			List<PointF> knots, int color, int alpha) {
 		Log.d("GammaGraph", "function drawGammaGraph");
-		cubic_hermite_spline(canvas, gammaGraphInfo);
+		Paint paint = new Paint();
+		paint.setColor(color);
+		paint.setAntiAlias(true);
+		paint.setAlpha(alpha);
+		cubic_hermite_spline(canvas, knots, 0.0005f, paint);
 	}
-
+	
 	private static PointF catnull_rome_spline_tangent(PointF p0, PointF p1) {
 		return new PointF((p0.x - p1.x) / 2, (p0.y - p1.y) / 2);
 	}
 
-	private static void cubic_hermite_spline(Canvas canvas, GammaGraphInfo gammaGraphInfo) {
-		Paint paint = new Paint();
-		paint.setAntiAlias(true);
-		paint.setStyle(Paint.Style.STROKE);
-		
-		List<PointF> knots = gammaGraphInfo.knots;
+	private static void cubic_hermite_spline(Canvas canvas, List<PointF> knots, float delta, Paint paint) {		
 		int n = knots.size();
-		final float delta = 0.0005f;
 		float px = 0;
 		float py = 0;
 		for (int i = 0; i < n; i++) {
@@ -162,12 +161,13 @@ public class GammaGraphUtils {
 							* m1.y;
 					canvas.drawPoint(px, py, paint);
 				}
-				
-				RectF baseRect = gammaGraphInfo.baseRect;
+				/*
+				RectF baseRect = knots.baseRect;
 				float zoom = (baseRect.right - baseRect.left) / 255f;
 				int gammaIndex = (int)((px - baseRect.left) / zoom);
 				int gammaValue = (int)((baseRect.bottom - baseRect.top - py) / zoom);
-				gammaGraphInfo.gammatable[gammaIndex] = gammaValue; 
+				knots.gammatable[gammaIndex] = gammaValue;
+				*/ 
 			}
 		}
 	}
@@ -197,14 +197,43 @@ public class GammaGraphUtils {
 		return boundLines;
 	}
 
-	public static void drawKnots(Canvas canvas, GammaGraphInfo gammaGraphInfo) {
+	public static void drawKnots(Canvas canvas, List<PointF> knots, int color) {
 		Log.d("GammaGraph", "function drawKnots");
 		Paint paint = new Paint();
 		paint.setAntiAlias(true);
-		paint.setColor(Color.BLACK);
+		paint.setColor(color);
 		paint.setStrokeWidth(7);
-		for (PointF knot : gammaGraphInfo.knots) {
+		for (PointF knot : knots) {
 			canvas.drawPoint(knot.x, knot.y, paint);
 		}
+	}
+
+	public static void addKnot(List<PointF> knots, PointF movingKnot) {
+		ListIterator<PointF> listIter = knots.listIterator();
+		while(listIter.hasNext()) {
+			PointF p0 = listIter.next();
+			if(movingKnot.x < p0.x) {
+				listIter.previous();
+				listIter.add(movingKnot);
+				Log.d("", "");
+				break;
+			}
+		}
+	}
+	private static boolean isOnCircle(PointF target, PointF base, float d) {
+		float dx = target.x - base.x;
+		float dy = target.y - base.y;
+		return Math.sqrt(dx * dx + dy * dy) < d;
+	}
+	public static PointF selectOrNewKnot(PointF touchPoint, List<PointF> knots) {
+		ListIterator<PointF> knotIter = knots.listIterator();
+		while(knotIter.hasNext()) {
+			PointF knot = knotIter.next();
+			if(isOnCircle(touchPoint, knot, 20f)) {
+				knotIter.remove();
+				return knot;
+			}
+		}
+		return touchPoint;
 	}
 }
